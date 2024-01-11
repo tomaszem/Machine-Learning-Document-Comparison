@@ -10,6 +10,7 @@ from normalize_vectors import normalize
 from concurrent.futures import ThreadPoolExecutor
 import time
 import yaml
+from scipy.spatial import distance_matrix
 
 
 # Constant - definition of batch size
@@ -81,7 +82,6 @@ start_time = time.time()
 # Loading and preprocessing texts
 folder_path = 'documents'
 texts, filenames = load_texts_from_pdfs_batched(folder_path, BATCH_SIZE)
-print(texts)
 
 # Creating a vocabulary and vectorizing texts
 def build_vocabulary(texts):
@@ -134,3 +134,23 @@ end_time = time.time()
 total_time = end_time - start_time
 
 print(f"Total execution time: {total_time:.2f} sec.")
+
+# Compute the distance matrix for reduced vectors
+dist_matrix = distance_matrix(reduced_vectors, reduced_vectors)
+
+# Function to display distances for each document in the reduced space
+def display_document_distances(dist_matrix, filenames):
+    for i, filename in enumerate(filenames):
+        # Pair each distance with the corresponding document filename
+        distances = [(dist, other_file) for j, (dist, other_file) in enumerate(zip(dist_matrix[i], filenames)) if i != j]
+
+        # Sort the distances in ascending order (closest documents first)
+        distances.sort(key=lambda x: x[0])
+
+        print(f"Distances from '{filename}' in space:")
+        for dist, other_file in distances:
+            print(f"\tWith '{other_file}': {dist:.2f}")
+        print()
+
+# Display distances in the reduced space
+display_document_distances(dist_matrix, filenames)
