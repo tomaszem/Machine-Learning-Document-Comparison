@@ -7,8 +7,14 @@ import os
 from collections import defaultdict
 from pca_implementation import pca
 from normalize_vectors import normalize
+from concurrent.futures import ThreadPoolExecutor
+import time
 
-# Funkce pro načtení textu z PDF
+
+# Constant - definition of batch size
+BATCH_SIZE = 5
+
+# Function to extract text from PDF
 def extract_text_from_pdf(pdf_path):
     with open(pdf_path, 'rb') as file:
         reader = PdfReader(file)
@@ -17,33 +23,49 @@ def extract_text_from_pdf(pdf_path):
             text += page.extract_text()
         return text
 
-# Funkce pro předzpracování textu
+# Function for text preprocessing
 def preprocess_text(text):
     text = text.lower()
-    # Nahrazení všech nealfanumerických znaků
     text = re.sub(r'\W+', ' ', text)
     return text
 
-# Načtení textů z více PDF souborů a vrácení názvů souborů
-def load_texts_from_pdfs(folder_path):
+# Processing files in a batch
+def process_files_batch(files_batch):
     texts = []
     filenames = []
-    for file in os.listdir(folder_path):
-        if file.endswith('.pdf'):
-            file_path = os.path.join(folder_path, file)
-            text = extract_text_from_pdf(file_path)
-            cleaned_text = preprocess_text(text)
-            texts.append(cleaned_text)
-            filenames.append(file)
+    for file in files_batch:
+        file_path = os.path.join(folder_path, file)
+        text = extract_text_from_pdf(file_path)
+        cleaned_text = preprocess_text(text)
+        texts.append(cleaned_text)
+        filenames.append(file)
     return texts, filenames
 
-# Načtení a předzpracování textů
-folder_path = 'documents'
-texts, filenames = load_texts_from_pdfs(folder_path)
-print (texts[5]);
+# Loading texts from multiple PDF files in batches
+def load_texts_from_pdfs_batched(folder_path, batch_size):
+    all_texts = []
+    all_filenames = []
+    files = [file for file in os.listdir(folder_path) if file.endswith('.pdf')]
 
+    for i in range(0, len(files), batch_size):
+        files_batch = files[i:i + batch_size]
+        with ThreadPoolExecutor() as executor:
+            futures = [executor.submit(process_files_batch, [file]) for file in files_batch]
+            for future in futures:
+                texts, filenames = future.result()
+                all_texts.extend(texts)
+                all_filenames.extend(filenames)
+
+    return all_texts, all_filenames
+
+# Start timer
+start_time = time.time()
+# Loading and preprocessing texts
+folder_path = 'documents'
+texts, filenames = load_texts_from_pdfs_batched(folder_path, BATCH_SIZE)
+
+# Creating a vocabulary and vectorizing texts
 def build_vocabulary(texts):
-    # Vytvoří slovník všech jedinečných slov v seznamu textů
     vocabulary = set()
     for text in texts:
         words = text.split()
@@ -51,43 +73,45 @@ def build_vocabulary(texts):
     return list(vocabulary)
 
 def vectorize_text(text, vocabulary, word_weights):
-    # Vytvoří vektor pro daný text na základě slovníku a váh slov
     word_count = defaultdict(int)
     for word in text.split():
         word_count[word] += 1
 
-    # Nulový vektor o velikosti slovníku
     vector = np.zeros(len(vocabulary))
     for i, word in enumerate(vocabulary):
-        vector[i] = word_count[word] * word_weights.get(word, 1)  # Použití váhy slova, pokud existuje
+        vector[i] = word_count[word] * word_weights.get(word, 1)
     return vector
 
 def custom_vectorization(texts, word_weights={}):
-    # Vlastní vektorizace textů s možností definovat váhy pro slova
     vocabulary = build_vocabulary(texts)
-    vectors = np.array([vectorize_text(text, vocabulary, word_weights) for text in texts])
-    # Normalizace vektorů
-    return normalize(vectors)
+    def vectorize(text):
+        return vectorize_text(text, vocabulary, word_weights)
 
+    with ThreadPoolExecutor() as executor:
+        vectors = list(executor.map(vectorize, texts))
 
-# Příklad vlastních vah pro určitá slova
+    return normalize(np.array(vectors))
+
+# Using custom weights for vectorization
 custom_weights = {"java": 12, "javascript": 5, "python": 19, "algebra": 3, "numerical": 3, "sql": 30}
-
-# Použití vlastní vektorizace
 custom_vectors = custom_vectorization(texts, custom_weights)
 
-# PCA redukce
+# PCA reduction and DBSCAN clustering
 reduced_vectors = pca(custom_vectors, 2)
-
-# DBSCAN clusterizace
 dbscan = DBSCAN(eps=0.5, min_samples=2)
 clusters = dbscan.fit_predict(reduced_vectors)
 
-# Vizualizace s názvy dokumentů
+# Visualization of results
 plot.scatter(reduced_vectors[:, 0], reduced_vectors[:, 1], c=clusters, cmap='viridis')
 for i, filename in enumerate(filenames):
     plot.text(reduced_vectors[i, 0], reduced_vectors[i, 1], filename, fontsize=9)
-plot.xlabel('Komponenta X')
-plot.ylabel('Komponenta Y')
-plot.title('Vizualizace výsledků clusterizace pomocí DBSCAN')
+plot.xlabel('Component X')
+plot.ylabel('Component Y')
+plot.title('Visualization of Clustering Results Using DBSCAN')
 plot.show()
+
+# Total execution time
+end_time = time.time()
+total_time = end_time - start_time
+
+print(f"Total execution time: {total_time:.2f} sec.")
