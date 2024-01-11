@@ -9,6 +9,7 @@ from pca_implementation import pca
 from normalize_vectors import normalize
 from concurrent.futures import ThreadPoolExecutor
 import time
+import yaml
 
 
 # Constant - definition of batch size
@@ -23,11 +24,28 @@ def extract_text_from_pdf(pdf_path):
             text += page.extract_text()
         return text
 
+# Function to load stopwords from a YAML file
+def load_stopwords(file_path):
+    with open(file_path, 'r') as file:
+        stopwords = yaml.safe_load(file)
+    return set(stopwords)
+
+# Path to your stopwords YAML file (update this to the correct path)
+stopwords_file_path = 'config/stopwords.yaml'
+
+# Load the stopwords
+stopwords_set = load_stopwords(stopwords_file_path)
+
 # Function for text preprocessing
 def preprocess_text(text):
+    # Convert text to lowercase
     text = text.lower()
+    # Remove all non-alphanumeric characters
     text = re.sub(r'\W+', ' ', text)
-    return text
+    # Remove stopwords
+    words = text.split()
+    filtered_words = [word for word in words if word not in stopwords_set]
+    return ' '.join(filtered_words)
 
 # Processing files in a batch
 def process_files_batch(files_batch):
@@ -63,6 +81,7 @@ start_time = time.time()
 # Loading and preprocessing texts
 folder_path = 'documents'
 texts, filenames = load_texts_from_pdfs_batched(folder_path, BATCH_SIZE)
+print(texts)
 
 # Creating a vocabulary and vectorizing texts
 def build_vocabulary(texts):
@@ -93,7 +112,7 @@ def custom_vectorization(texts, word_weights={}):
     return normalize(np.array(vectors))
 
 # Using custom weights for vectorization
-custom_weights = {"java": 12, "javascript": 5, "python": 19, "algebra": 3, "numerical": 3, "sql": 30}
+custom_weights = {"java": 12, "javascript": 5, "python": 9, "algebra": 3, "numerical": 3, "sql": 10}
 custom_vectors = custom_vectorization(texts, custom_weights)
 
 # PCA reduction and DBSCAN clustering
