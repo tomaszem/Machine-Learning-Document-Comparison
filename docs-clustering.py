@@ -11,6 +11,8 @@ from concurrent.futures import ThreadPoolExecutor
 import time
 import yaml
 from scipy.spatial import distance_matrix
+from ravendb import DocumentStore
+from data_storage import DataStorage
 
 
 # Constant - definition of batch size
@@ -135,22 +137,20 @@ total_time = end_time - start_time
 
 print(f"Total execution time: {total_time:.2f} sec.")
 
-# Compute the distance matrix for reduced vectors
+# Load configuration
+with open('config/db-config.yaml', 'r') as config_file:
+    config = yaml.safe_load(config_file)
+    ravendb_config = config['ravendb']
+
+store = DocumentStore(urls=[ravendb_config['url']], database=ravendb_config['database'])
+store.initialize()
+
+# Create an instance of DataStorage
+data_storage = DataStorage(store)
+
+# Assume dist_matrix_2d and filenames are defined earlier in your main.py
+
 dist_matrix = distance_matrix(reduced_vectors, reduced_vectors)
 
-# Function to display distances for each document in the reduced space
-def display_document_distances(dist_matrix, filenames):
-    for i, filename in enumerate(filenames):
-        # Pair each distance with the corresponding document filename
-        distances = [(dist, other_file) for j, (dist, other_file) in enumerate(zip(dist_matrix[i], filenames)) if i != j]
-
-        # Sort the distances in ascending order (closest documents first)
-        distances.sort(key=lambda x: x[0])
-
-        print(f"Distances from '{filename}' in space:")
-        for dist, other_file in distances:
-            print(f"\tWith '{other_file}': {dist:.2f}")
-        print()
-
-# Display distances in the reduced space
-display_document_distances(dist_matrix, filenames)
+# Use DataStorage instance to store distances
+data_storage.store_document_distances(dist_matrix, filenames)
