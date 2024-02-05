@@ -14,9 +14,9 @@ from scipy.spatial import distance_matrix
 from ravendb import DocumentStore
 from data_storage import DataStorage
 
-
 # Constant - definition of batch size
 BATCH_SIZE = 5
+
 
 # Function to extract text from PDF
 def extract_text_from_pdf(pdf_path):
@@ -27,17 +27,20 @@ def extract_text_from_pdf(pdf_path):
             text += page.extract_text()
         return text
 
+
 # Function to load stopwords from a YAML file
 def load_stopwords(file_path):
     with open(file_path, 'r') as file:
         stopwords = yaml.safe_load(file)
     return set(stopwords)
 
+
 # Path to your stopwords YAML file (update this to the correct path)
 stopwords_file_path = 'config/stopwords.yaml'
 
 # Load the stopwords
 stopwords_set = load_stopwords(stopwords_file_path)
+
 
 # Function for text preprocessing
 def preprocess_text(text):
@@ -50,6 +53,7 @@ def preprocess_text(text):
     filtered_words = [word for word in words if word not in stopwords_set]
     return ' '.join(filtered_words)
 
+
 # Processing files in a batch
 def process_files_batch(files_batch):
     texts = []
@@ -61,6 +65,7 @@ def process_files_batch(files_batch):
         texts.append(cleaned_text)
         filenames.append(file)
     return texts, filenames
+
 
 # Loading texts from multiple PDF files in batches
 def load_texts_from_pdfs_batched(folder_path, batch_size):
@@ -79,11 +84,13 @@ def load_texts_from_pdfs_batched(folder_path, batch_size):
 
     return all_texts, all_filenames
 
+
 # Start timer
 start_time = time.time()
 # Loading and preprocessing texts
 folder_path = 'documents'
 texts, filenames = load_texts_from_pdfs_batched(folder_path, BATCH_SIZE)
+
 
 # Creating a vocabulary and vectorizing texts
 def build_vocabulary(texts):
@@ -92,6 +99,7 @@ def build_vocabulary(texts):
         words = text.split()
         vocabulary.update(words)
     return list(vocabulary)
+
 
 def vectorize_text(text, vocabulary, word_weights):
     word_count = defaultdict(int)
@@ -103,8 +111,10 @@ def vectorize_text(text, vocabulary, word_weights):
         vector[i] = word_count[word] * word_weights.get(word, 1)
     return vector
 
+
 def custom_vectorization(texts, word_weights={}):
     vocabulary = build_vocabulary(texts)
+
     def vectorize(text):
         return vectorize_text(text, vocabulary, word_weights)
 
@@ -112,6 +122,7 @@ def custom_vectorization(texts, word_weights={}):
         vectors = list(executor.map(vectorize, texts))
 
     return normalize(np.array(vectors))
+
 
 # Using custom weights for vectorization
 custom_weights = {"java": 12, "javascript": 5, "python": 9, "algebra": 3, "numerical": 3, "sql": 10}
