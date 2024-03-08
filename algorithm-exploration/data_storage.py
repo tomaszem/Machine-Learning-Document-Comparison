@@ -1,4 +1,3 @@
-from ravendb import DocumentStore
 from document_distance import DocumentDistance, DocumentComparison
 from distance_calculator import calculate_euclidean_distances
 

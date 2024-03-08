@@ -35,7 +35,7 @@ def load_texts_from_pdfs(folder_path):
             filenames.append(file)
     return texts, filenames
 
-folder_path = 'documents'
+folder_path = '../documents'
 texts, filenames = load_texts_from_pdfs(folder_path)
 
 # Bag of Words vektorizace

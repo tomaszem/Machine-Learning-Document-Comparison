@@ -61,7 +61,7 @@ def custom_vectorization(texts):
     return normalize(vectors), vocabulary
 
 # Načtení a předzpracování textů
-folder_path = 'documents'  # Název složky s dokumenty
+folder_path = '../documents'  # Název složky s dokumenty
 texts, filenames = load_texts_from_pdfs(folder_path)
 
 # Použití vlastní vektorizace

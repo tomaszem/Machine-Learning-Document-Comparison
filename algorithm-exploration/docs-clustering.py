@@ -9,14 +9,12 @@ from collections import defaultdict
 from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from pca_implementation import pca
-from normalize_vectors import normalize
 from concurrent.futures import ThreadPoolExecutor
 import time
 import yaml
-from scipy.spatial import distance_matrix
-from ravendb import DocumentStore
-from data_storage import DataStorage
+# from scipy.spatial import distance_matrix
+# from ravendb import DocumentStore
+# from data_storage import DataStorage
 
 # Constant - definition of batch size
 BATCH_SIZE = 5
@@ -40,7 +38,7 @@ def load_stopwords(file_path):
 
 
 # Path to your stopwords YAML file (update this to the correct path)
-stopwords_file_path = 'config/stopwords.yaml'
+stopwords_file_path = '../config/stopwords.yaml'
 
 # Load the stopwords
 stopwords_set = load_stopwords(stopwords_file_path)
@@ -92,7 +90,7 @@ def load_texts_from_pdfs_batched(folder_path, batch_size):
 # Start timer
 start_time = time.time()
 # Loading and preprocessing texts
-folder_path = 'documents'
+folder_path = '../documents'
 texts, filenames = load_texts_from_pdfs_batched(folder_path, BATCH_SIZE)
 
 
