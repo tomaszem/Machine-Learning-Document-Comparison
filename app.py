@@ -1,4 +1,6 @@
 from flask import Flask
+from flask import request
+from flask_cors import CORS
 import os
 from app.prepare_json_data import prepare_json_data
 from flask import jsonify
@@ -9,7 +11,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import glob
 
 app = Flask(__name__)
-
+CORS(app)  # Allow CORS
 
 @app.route('/')
 def home():
@@ -64,6 +66,34 @@ def get_data():
             return jsonify(json.load(f))
     else:
         return jsonify({"error": "No JSON files found."})
+
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    if file and file.filename.endswith('.pdf'):
+        # Define the base directory dynamically
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # Define the target directory for PDF files
+        documents_dir = os.path.join(base_dir, 'documents', 'pdf')
+
+        if not os.path.exists(documents_dir):
+            os.makedirs(documents_dir)
+
+        # Construct the full path
+        file_path = os.path.join(documents_dir, file.filename)
+
+        # Save the file
+        file.save(file_path)
+
+        return jsonify({'message': 'File uploaded successfully'}), 200
+    else:
+        return jsonify({'error': 'Invalid file type'}), 400
 
 
 if __name__ == "__main__":
