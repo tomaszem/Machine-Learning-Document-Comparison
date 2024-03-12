@@ -1,24 +1,24 @@
-# Použij oficiální obraz Pythonu 3.12.0 jako základní obraz
+# Use the official Python 3.12.0 image as the base image
 FROM python:3.12.0
 
-# Nastav pracovní adresář v kontejneru
+# Set the working directory in the container
 WORKDIR /
 
-# Kopíruj soubory požadavků a nainstaluj závislosti
+# Copy the requirements files and install dependencies
 COPY requirements.txt requirements.txt
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Kopíruj celou aplikaci do kontejneru
+# Copy the entire application into the container
 COPY . .
 
-# Nastav proměnnou prostředí
+# Set environment variables
 #ENV FLASK_APP=app.py
 #ENV FLASK_RUN_HOST=0.0.0.0
 
-# Exponuj port
+# Expose port
 EXPOSE 5000
 
-# Spusť aplikaci
+# Run the application
 # CMD ["flask", "run"]
 
 ENTRYPOINT ["python", "./app.py"]
