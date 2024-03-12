@@ -1,0 +1,65 @@
+[
+    {
+        "id": "dbdb337a-8faf-4128-8748-487fa7b93ac4",
+        "filename": "2402.pdf",
+        "x": -0.14704210780067437,
+        "y": -0.36208991337280727,
+        "cluster": 0
+    },
+    {
+        "id": "75c42f52-3848-4dea-bc6c-5c1a1efbc350",
+        "filename": "ArchitectureOfDatabaseSystem.pdf",
+        "x": -0.4936696524513793,
+        "y": 0.5001679770089184,
+        "cluster": 0
+    },
+    {
+        "id": "a41ac353-dbd6-4ad0-b621-0c3cc93fbb7e",
+        "filename": "DataStructuresAlgorithmsWithJavaScript.pdf",
+        "x": 0.7766919764472109,
+        "y": 0.26543161078225647,
+        "cluster": 1
+    },
+    {
+        "id": "6cec4771-e9f4-4418-b750-368e77fb6509",
+        "filename": "ImplementingSortingInDatabases.pdf",
+        "x": -0.31114222918356244,
+        "y": 0.0959885817671357,
+        "cluster": 0
+    },
+    {
+        "id": "b7b0568e-e708-4d7f-95b7-57f539606da5",
+        "filename": "IntroductionToJavaScript.pdf",
+        "x": 0.7832120738823668,
+        "y": 0.24304460849810405,
+        "cluster": 1
+    },
+    {
+        "id": "1d8ee02b-2788-4c22-96fb-bbc6020c107b",
+        "filename": "JavaForStudents.pdf",
+        "x": 0.07573703728948054,
+        "y": -0.3087305560517127,
+        "cluster": 0
+    },
+    {
+        "id": "3dbc9c1d-6a62-4723-8d61-ddf66db21322",
+        "filename": "PythonComputationalScience.pdf",
+        "x": -0.10522056790080281,
+        "y": -0.4533327551968253,
+        "cluster": 0
+    },
+    {
+        "id": "25f6a623-9adf-44c2-8f83-9fa67b849ccc",
+        "filename": "SQLProgramming.pdf",
+        "x": -0.09284914335071429,
+        "y": -0.4780454025845457,
+        "cluster": 0
+    },
+    {
+        "id": "49f8137b-4ab7-4423-a0f5-29ea225d2a61",
+        "filename": "TutorialDatabaseQueries.pdf",
+        "x": -0.4857173869319227,
+        "y": 0.4975658491494775,
+        "cluster": 0
+    }
+]
