@@ -8,6 +8,10 @@ WORKDIR /
 COPY requirements.txt requirements.txt
 RUN pip3 install --no-cache-dir -r requirements.txt
 
+# Download NLTK data
+RUN python -m nltk.downloader stopwords
+RUN python -m nltk.downloader punkt
+
 # Copy the entire application into the container
 COPY . .
 
