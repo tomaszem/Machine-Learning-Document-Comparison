@@ -2,7 +2,7 @@
 FROM python:3.12.0
 
 # Set the working directory in the container
-WORKDIR /
+WORKDIR /app
 
 # Copy the requirements files and install dependencies
 COPY requirements.txt requirements.txt
