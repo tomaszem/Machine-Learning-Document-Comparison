@@ -6,3 +6,5 @@ PyYAML
 nltk
 APScheduler
 flask-cors
+chromadb
+fitz
