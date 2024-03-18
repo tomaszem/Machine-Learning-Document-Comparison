@@ -2,11 +2,15 @@
 FROM python:3.12.0
 
 # Set the working directory in the container
-WORKDIR /
+WORKDIR /app
 
 # Copy the requirements files and install dependencies
 COPY requirements.txt requirements.txt
 RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Download NLTK data
+RUN python -m nltk.downloader stopwords
+RUN python -m nltk.downloader punkt
 
 # Copy the entire application into the container
 COPY . .

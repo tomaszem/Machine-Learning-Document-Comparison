@@ -6,10 +6,10 @@ from nltk.tokenize import word_tokenize
 
 # Function to download nltk resources if not already downloaded
 def download_nltk_resources():
-    resources = [("corpora", "stopwords"), ("tokenizers", "punkt")]
-    for resource_type, resource_name in resources:
+    resources = ["stopwords", "punkt"]
+    for resource_name in resources:
         try:
-            nltk.data.find(f"{resource_type}/{resource_name}")
+            nltk.data.find(f"tokenizers/{resource_name}")
         except LookupError:
             nltk.download(resource_name)
 
