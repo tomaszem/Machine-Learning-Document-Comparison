@@ -4,7 +4,7 @@ import chromadb
 import chromadb.utils.embedding_functions as emb_fn
 
 default_ef = emb_fn.DefaultEmbeddingFunction()
-client = chromadb.PersistentClient(path="Database")
+client = chromadb.HttpClient(host='localhost', port=8000)
 
 collection = client.get_or_create_collection(name="pdf_collection", embedding_function=default_ef)
 
