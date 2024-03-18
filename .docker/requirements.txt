@@ -1,0 +1,10 @@
+flask
+PyPDF2
+numpy
+scikit-learn
+PyYAML
+nltk
+APScheduler
+flask-cors
+chromadb
+fitz
