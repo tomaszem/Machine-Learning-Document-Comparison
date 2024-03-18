@@ -56,7 +56,7 @@ def word_count_vectorize(texts, vocabulary):
     return np.array(vectors)
 
 # Načtení a předzpracování textů
-folder_path = 'documents'
+folder_path = '../documents'
 texts, filenames = load_texts_from_pdfs(folder_path)
 
 # Vytvoření slovníku a vektorizace textů

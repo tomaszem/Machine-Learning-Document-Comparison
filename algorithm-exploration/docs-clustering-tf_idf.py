@@ -84,7 +84,7 @@ def tfidf_vectorization(texts):
     return np.array(tfidf_matrix)
 
 
-folder_path = 'documents'
+folder_path = '../documents'
 texts, filenames = load_texts_from_pdfs(folder_path)
 tfidf_vectors = tfidf_vectorization(texts)
 normalized_vectors = normalize(tfidf_vectors)

@@ -1,17 +1,16 @@
 # Machine Learning Document Comparison
-## Running server
+## Overview
+This project, "Machine Learning Document Comparison", is focused on developing algorithms and methods for comparing documents using machine learning techniques. The aim is to implement and refine various algorithms and clustering methods to enable efficient and accurate comparison of textual data.
 
-Nejdříve
+## Installation
+Build the Image using the following command:
 
-bash
-`pip install chromadb`
+```bash
+$ docker build -t clustering-app:latest .
+```
 
-Start server
+Run the Docker container using the command shown below:
 
-bash
-`chroma run --path /db_path`
-
-Pro perzistentní úložiště
-
-bash
-`client = chromadb.PersistentClient(path="/path/to/save/to")`
+```bash
+$ docker run -d -p 5000:5000 clustering-app
+```
