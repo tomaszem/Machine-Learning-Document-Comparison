@@ -8,3 +8,4 @@ APScheduler
 flask-cors
 chromadb
 fitz
+umap-learn
