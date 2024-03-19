@@ -9,6 +9,9 @@ from datetime import datetime
 import json
 from apscheduler.schedulers.background import BackgroundScheduler
 import glob
+import numpy as np
+import yaml
+from app.optimal_eps_range import find_optimal_eps_range
 
 app = Flask(__name__)
 CORS(app)  # Allow CORS
@@ -94,6 +97,60 @@ def upload_file():
         return jsonify({'message': 'File uploaded successfully'}), 200
     else:
         return jsonify({'error': 'Invalid file type'}), 400
+
+
+@app.route('/get-eps-range')
+def get_eps_range():
+    list_of_files = glob.glob('./*.json')
+    if list_of_files:
+        latest_file = max(list_of_files, key=os.path.getctime)
+        with open(latest_file, 'r') as file:
+            data = json.load(file)
+
+    data_array = np.array([[item["x"], item["y"]] for item in data])
+
+    # Find the optimal EPS range
+    start_eps, end_eps, suggested_eps_values = find_optimal_eps_range(data_array)
+
+    result = {
+        "start_eps": start_eps,
+        "end_eps": end_eps,
+        "suggested_eps_values": suggested_eps_values
+    }
+
+    return jsonify(result)
+
+
+@app.route('/submit-eps', methods=['POST'])
+def submit_eps():
+    data = request.get_json()
+    eps_value = data.get('eps')
+
+    if eps_value is not None:
+        print(f"Received EPS value: {eps_value}")
+
+        # Define the path to the config.yaml file
+        config_path = os.path.join('app', 'config', 'config.yaml')
+
+        # Load the current contents of the config.yaml file
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as file:
+                config = yaml.safe_load(file) or {}
+        else:
+            config = {}
+
+        # Update the EPS value
+        if 'dbscan' not in config:
+            config['dbscan'] = {}
+        config['dbscan']['eps'] = eps_value
+
+        # Write the updated dictionary back to the config file
+        with open(config_path, 'w') as file:
+            yaml.safe_dump(config, file, default_flow_style=False)
+
+        return jsonify({"message": "Sucess", "eps": eps_value}), 200
+    else:
+        return jsonify({"error": "Internal error"}), 400
 
 
 if __name__ == "__main__":
