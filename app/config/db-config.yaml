@@ -1,0 +1,4 @@
+# TODO: Add Chroma DB config, such as an example of RavenDB below
+# ravendb:
+#   url: "http://localhost:8080"
+#   database: "Results"
