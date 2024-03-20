@@ -160,4 +160,4 @@ cython_debug/
 .idea/
 
 # Scientific papers as data set is included .gitginore file
-documents/
+# documents/
