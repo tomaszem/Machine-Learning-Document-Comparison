@@ -1,6 +1,7 @@
-# Machine Learning Document Comparison
+# Scientific Papers Clustering
 ## Overview
-This project, "Machine Learning Document Comparison", is focused on developing algorithms and methods for comparing documents using machine learning techniques. The aim is to implement and refine various algorithms and clustering methods to enable efficient and accurate comparison of textual data.
+The project aims to cluster scientific papers using fast and effective and fast algorithms such as TF-IDF, PCA/UMAP, DBSCAN etc. The Back-End application also analyzes other relevant information from scientific documents. Built on Python Flask, this back-end application leverages Chroma DB as a vector database for efficient data handling and retrieval. Automatic clustering is facilitated through Advanced Python Scheduler, allowing scheduling of clustering processes by time and date.
+
 
 ## Installation
 
