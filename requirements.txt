@@ -9,3 +9,5 @@ flask-cors
 chromadb
 fitz
 umap-learn
+pdfminer
+PyPDF4
