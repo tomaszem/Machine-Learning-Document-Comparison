@@ -1,10 +1,10 @@
 import os
-import re
-import string
-import PyPDF4
 import fitz  # PyMuPDF
+import re
+import PyPDF4
 from pdfminer.high_level import extract_text
 from pdfminer.pdfparser import PDFSyntaxError
+import string
 
 
 def sanitize(filename):
@@ -21,7 +21,7 @@ def metadata(filename):
         with open(filename, 'rb') as file:
             reader = PyPDF4.PdfFileReader(file)
             docinfo = reader.getDocumentInfo()
-            return docinfo.title if docinfo else ""
+            return docinfo if docinfo else ""
     except Exception:
         return ""
 
@@ -58,9 +58,12 @@ def title_end(lines, start, max_lines=2):
 
 def text_title(filename):
     lines = pdf_text(filename).strip().split('\n')
+
     i = title_start(lines)
     j = title_end(lines, i)
+
     title = ' '.join(line.strip() for line in lines[i:j])
+
     next_line_index = j
     while next_line_index < len(lines) and empty_str(lines[next_line_index]):
         next_line_index += 1
@@ -72,74 +75,97 @@ def valid_title(title):
     return not empty_str(title)
 
 
-def pdf_title_authors(filename):
+def pdf_title(filename):
     pdf_document = fitz.open(filename)
+
     text = ""
     for page_num in range(len(pdf_document)):
         page = pdf_document.load_page(page_num)
         text += page.get_text()
-    title = metadata(filename)
-    authors = metadata(filename)
+
+    title = metadata(filename).get('/Title', "")
+    authors = metadata(filename).get('/Author', "")
+
     if valid_title(title):
         match = re.search(authors, text)
         if match:
             match_line = text[match.start():text.find('\n', match.start())].strip()
+
             match_line = re.sub(r'[,*]', '', match_line)
             match_line = re.sub(r'\b\w\b', '', match_line)
             match_line = match_line.replace('  ', ', ')
+
             authors = match_line
-        return title, authors
+
+        return title, authors  # Return an empty authors for metadata title
+
     title, authors = text_title(filename)
     if valid_title(title):
-        lines = pdf_text(filename).strip().split('\n')
+        lines = pdf_text(filename).strip().split('\n')  # Fetch lines again to access the authors
         if authors.endswith(','):
             next_line_index = lines.index(authors)
             authors += " " + lines[next_line_index + 1].strip() if next_line_index + 1 < len(lines) else ""
         return title, authors
+
     return os.path.basename(os.path.splitext(filename)[0]), ""
 
 
 def extract_abstract(pdf_path):
     pdf_document = fitz.open(pdf_path)
+
     abstract = None
+
     for page_num in range(len(pdf_document)):
         page = pdf_document.load_page(page_num)
         text = page.get_text()
+
         abstract_match = (
-                    re.search(r'(?s)((?<=\bAbstract\b).*?(?=\b(?:\d*\s*)?Introduction\b))', text, re.IGNORECASE) or
-                    re.search(r'(?s)((?<=\bA b s t r a c t\b).*?(?=\b(?:\d*\s*)?Introduction\b))', text, re.IGNORECASE))
+                re.search(r'(?s)((?<=\bAbstract\b).*?(?=\b(?:\d*\s*)?Introduction\b))', text, re.IGNORECASE) or
+                re.search(r'(?s)((?<=\bA b s t r a c t\b).*?(?=\b(?:\d*\s*)?Introduction\b))', text, re.IGNORECASE))
         if abstract_match:
             abstract = abstract_match.group(1).strip()
             break
+
     pdf_document.close()
+
     return abstract
 
 
 def extract_references(pdf_path):
     pdf_document = fitz.open(pdf_path)
+
     references = None
+
     num_pages = len(pdf_document)
+
     text = ""
     start_page = max(0, num_pages - 3)
     for page_num in range(start_page, num_pages):
         page = pdf_document.load_page(page_num)
         text += page.get_text()
+
     pdf_document.close()
+
     references_match = (re.search(r'\bReferences\b\s*(.*)', text, re.IGNORECASE | re.DOTALL))
     if references_match:
         references = references_match.group(1).strip()
+
     return references
 
 
 def extract_details(directory):
     pdf_details = {}
+
     for filename in os.listdir(directory):
         if filename.endswith(".pdf"):
             file_path = os.path.join(directory, filename)
+
             abstract = extract_abstract(file_path)
-            title, authors = pdf_title_authors(file_path)
+            title, authors = pdf_title(file_path)
             references = extract_references(file_path)
+
             pdf_details[filename] = {"abstract": abstract, "title": title, "authors": authors, "references": references}
+
     return pdf_details
 
 
@@ -147,8 +173,8 @@ directory_path = "../documents"
 pdf_details = extract_details(directory_path)
 
 for filename, info in pdf_details.items():
-    abstract = info['abstract']
-    references = info['references']
+    abstract = info["abstract"]
+    references = info["references"]
     title = info["title"]
     authors = sanitize_authors(info["authors"])
 
