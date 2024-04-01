@@ -11,3 +11,4 @@ fitz
 umap-learn
 pdfminer
 PyPDF4
+spacy

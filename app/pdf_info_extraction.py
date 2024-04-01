@@ -5,6 +5,7 @@ import PyPDF4
 from pdfminer.high_level import extract_text
 from pdfminer.pdfparser import PDFSyntaxError
 import string
+import spacy
 
 
 def sanitize(filename):
@@ -13,7 +14,13 @@ def sanitize(filename):
 
 
 def sanitize_authors(authors):
+    authors = authors.replace('\n', '')
     return ''.join([c for c in authors if not c.isdigit()])
+
+
+def remove_email_addresses(string):
+    r = re.compile(r'[\w\.-]+@[\w\.-]+')
+    return r.sub('', string)
 
 
 def metadata(filename):
@@ -40,6 +47,42 @@ def pdf_text(filename):
         return text
     except (PDFSyntaxError, Exception):
         return ""
+
+
+def find_persons(filename, title):
+    nlp = spacy.load("en_core_web_sm")
+    text = extract_text(filename)
+    lines = text.split('\n')
+
+    # Take lines until "Abstract" is found
+    abstract_found = False
+    first_lines = []
+    for line in lines:
+        if abstract_found:
+            break
+        if "abstract" in line.lower() or "a b s t r a c t" in line.lower():
+            abstract_found = True
+        if line.strip():  # Check if line is non-empty
+            first_lines.append(line.strip())  # Remove leading/trailing whitespace
+
+    sanitized_text = '\n'.join(first_lines)
+    doc = nlp(sanitized_text)
+    persons = []
+
+    for ent in doc.ents:
+        if ent.label_ == "PERSON" and "ORG" not in ent.text:
+            persons.append(ent.text.strip())  # Remove leading/trailing whitespace
+
+    persons = sanitize_authors(', '.join(persons))
+    persons = remove_email_addresses(persons)
+
+    # Remove parts of title from persons
+    title_parts = title.split()
+    for part in title_parts:
+        if part in persons:
+            persons = persons.replace(part, '')
+
+    return persons
 
 
 def title_start(lines):
@@ -84,30 +127,15 @@ def pdf_title(filename):
         text += page.get_text()
 
     title = metadata(filename).get('/Title', "")
-    authors = metadata(filename).get('/Author', "")
 
     if valid_title(title):
-        match = re.search(authors, text)
-        if match:
-            match_line = text[match.start():text.find('\n', match.start())].strip()
+        return title  # Return only title
 
-            match_line = re.sub(r'[,*]', '', match_line)
-            match_line = re.sub(r'\b\w\b', '', match_line)
-            match_line = match_line.replace('  ', ', ')
-
-            authors = match_line
-
-        return title, authors  # Return an empty authors for metadata title
-
-    title, authors = text_title(filename)
+    title, _ = text_title(filename)
     if valid_title(title):
-        lines = pdf_text(filename).strip().split('\n')  # Fetch lines again to access the authors
-        if authors.endswith(','):
-            next_line_index = lines.index(authors)
-            authors += " " + lines[next_line_index + 1].strip() if next_line_index + 1 < len(lines) else ""
-        return title, authors
+        return title
 
-    return os.path.basename(os.path.splitext(filename)[0]), ""
+    return os.path.basename(os.path.splitext(filename)[0])
 
 
 def extract_abstract(pdf_path):
@@ -133,23 +161,32 @@ def extract_abstract(pdf_path):
 
 def extract_references(pdf_path):
     pdf_document = fitz.open(pdf_path)
-
     references = None
-
     num_pages = len(pdf_document)
-
     text = ""
-    start_page = max(0, num_pages - 3)
-    for page_num in range(start_page, num_pages):
+    references_found = False
+    appendix_found = False
+
+    for page_num in range(num_pages - 1, -1, -1):
         page = pdf_document.load_page(page_num)
-        text += page.get_text()
+        text = page.get_text() + text
+        if re.search(r'\bReferences\b', text, re.IGNORECASE) or re.search(r'\bReference\b', text, re.IGNORECASE):
+            references_found = True
+            break
+        elif re.search(r'\bAppendix\b', text, re.IGNORECASE):
+            appendix_found = True
+
+    if references_found:
+        # Check for "Appendix" after the references
+        if appendix_found:
+            appendix_index = re.search(r'\bAppendix\b', text, re.IGNORECASE)
+            text = text[:appendix_index.start()]
+
+        references_match = re.search(r'\bReference(?:s)?\b\s*(.*)', text, re.IGNORECASE | re.DOTALL)
+        if references_match:
+            references = references_match.group(1).strip()
 
     pdf_document.close()
-
-    references_match = (re.search(r'\bReferences\b\s*(.*)', text, re.IGNORECASE | re.DOTALL))
-    if references_match:
-        references = references_match.group(1).strip()
-
     return references
 
 
@@ -161,10 +198,12 @@ def extract_details(directory):
             file_path = os.path.join(directory, filename)
 
             abstract = extract_abstract(file_path)
-            title, authors = pdf_title(file_path)
+            title = pdf_title(file_path)  # Ignore authors
             references = extract_references(file_path)
+            authors = find_persons(file_path, title)
 
-            pdf_details[filename] = {"abstract": abstract, "title": title, "authors": authors, "references": references}
+            pdf_details[filename] = {"abstract": abstract, "title": title, "authors": authors, "references": references
+                                     }
 
     return pdf_details
 
@@ -176,7 +215,8 @@ for filename, info in pdf_details.items():
     abstract = info["abstract"]
     references = info["references"]
     title = info["title"]
-    authors = sanitize_authors(info["authors"])
+    authors = info["authors"]
 
     print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nNext Document:\n")
-    print(f"Filename: {filename}\nTitle: {title}\nAuthors: {authors}\nAbstract:\n{abstract}\nReferences:\n{references}\n")
+    print(
+        f"Filename: {filename}\nTitle: {title}\nAuthors: {authors}\nAbstract:\n{abstract}\nReferences:\n{references}\n")
