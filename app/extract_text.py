@@ -1,17 +1,15 @@
 import os
-from PyPDF2 import PdfReader
+from pdfminer.high_level import extract_text
 from concurrent.futures import ThreadPoolExecutor
 from app.preprocess_text import text_normalization
 
 folder_path = 'documents'
 
+
 def extract_text_from_pdf(pdf_path):
-    with open(pdf_path, 'rb') as file:
-        reader = PdfReader(file)
-        text = ""
-        for page in reader.pages:
-            text += page.extract_text()
-        return text
+    # Using PDFMiner high_level extract_text function
+    text = extract_text(pdf_path)
+    return text
 
 
 # Processing files in a batch
@@ -43,15 +41,3 @@ def load_texts_from_pdfs_batched(batch_size):
                 all_filenames.extend(filenames)
 
     return all_texts, all_filenames
-
-# Path to your stopwords YAML file (update this to the correct path)
-# stopwords_file_path = 'config/stopwords.yaml'
-
-# The alternative way using custom stopwords set
-# def load_stopwords(file_path):
-#     with open(file_path, 'r') as file:
-#         stopwords = yaml.safe_load(file)
-#     return set(stopwords)
-
-# Load the stopwords
-# stopwords_set = load_stopwords(stopwords_file_path)
