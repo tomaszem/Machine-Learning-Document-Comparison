@@ -2,19 +2,22 @@ from flask import Flask
 from flask import request
 from flask_cors import CORS
 import os
-from app.prepare_json_data import prepare_json_data
 from flask import jsonify
-from app.clustering_operations import perform_clustering
 from datetime import datetime
 import json
 from apscheduler.schedulers.background import BackgroundScheduler
 import glob
 import numpy as np
 import yaml
+from app.clustering_operations import perform_clustering
+from app.prepare_json_data import prepare_json_data
 from app.optimal_eps_range import find_optimal_eps_range
+from app.pdf_info_extraction import get_pdf_details
+from app.prepare_json_pdf_data import pdf_info_to_json
 
 app = Flask(__name__)
 CORS(app)  # Allow CORS
+
 
 @app.route('/')
 def home():
@@ -58,6 +61,13 @@ def cluster():
 
     # Use jsonify to convert data to JSON and return it with the correct content type
     return jsonify(json_data)
+
+
+@app.route('/pdf-info')
+def get_pdf_detail():
+    pdf_details = get_pdf_details()
+    pdf_details_json = pdf_info_to_json(pdf_details)
+    return jsonify(pdf_details_json)
 
 
 @app.route('/get-data')
