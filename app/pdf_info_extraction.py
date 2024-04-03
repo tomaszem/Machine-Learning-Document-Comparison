@@ -208,6 +208,24 @@ def extract_details(directory):
     return pdf_details
 
 
+def get_pdf_details():
+    directory_path = 'documents'
+    pdf_details = extract_details(directory_path)
+    extracted_details = []
+    for filename, info in pdf_details.items():
+        details = {
+            'filename': filename,
+            'abstract': info['abstract'],
+            'references': info['references'],
+            'title': info['title'],
+            'authors': info['authors']
+        }
+        extracted_details.append(details)
+    return extracted_details
+
+
+# For testing purposes only
+"""
 directory_path = "../documents"
 pdf_details = extract_details(directory_path)
 
@@ -220,3 +238,4 @@ for filename, info in pdf_details.items():
     print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nNext Document:\n")
     print(
         f"Filename: {filename}\nTitle: {title}\nAuthors: {authors}\nAbstract:\n{abstract}\nReferences:\n{references}\n")
+"""
