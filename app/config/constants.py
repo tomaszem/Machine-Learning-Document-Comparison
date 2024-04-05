@@ -1,1 +1,2 @@
-PDF_PATH = '../documents'
+PDF_PATH = 'documents'
+BATCH_SIZE = 5
