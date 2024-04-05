@@ -2,28 +2,48 @@ from sklearn.decomposition import PCA
 from app.extract_text import load_texts_from_pdfs_batched
 from app.tf_idf_algorithm import custom_vectorization
 from sklearn.cluster import DBSCAN
-from umap import UMAP
+# from umap import UMAP
+from sklearn.cluster import AgglomerativeClustering
+from app.config.constants import BATCH_SIZE
 
 
 def perform_clustering():
-    # PCA reduction to 2 dimensions
-    BATCH_SIZE = 5
     texts, filenames = load_texts_from_pdfs_batched(BATCH_SIZE)
 
-    # custom_weights = {"algebra": 3, "numerical": 3, "sql": 10}
     custom_weights = {}
     custom_vectors = custom_vectorization(texts, custom_weights)
 
     # UMAP for dimensionality reduction
-    #umap = UMAP(n_components=2)
-    #reduced_vectors = umap.fit_transform(custom_vectors)
+    # umap = UMAP(n_components=2)
+    # reduced_vectors = umap.fit_transform(custom_vectors)
 
-    pca = PCA(n_components=2)
-    reduced_vectors = pca.fit_transform(custom_vectors)
+    # DBSCAN
+    # dbscan = DBSCAN(eps=0.08, min_samples=2)
+    # initial_clusters = dbscan.fit_predict(reduced_vectors)
 
-    # DBSCAN clustering
-    # PCA 0.05; 0.08
-    dbscan = DBSCAN(eps=0.08, min_samples=2)
-    clusters = dbscan.fit_predict(reduced_vectors)
+    # First stage
+    pca_3d = PCA(n_components=3)
+    reduced_vectors_3d = pca_3d.fit_transform(custom_vectors)
 
-    return filenames, reduced_vectors, clusters
+    agglomerative_clustering = AgglomerativeClustering(n_clusters=5, linkage='ward')
+    initial_clusters = agglomerative_clustering.fit_predict(reduced_vectors_3d)
+
+    # Prepare for Second stage clustering
+    final_clusters = []
+    reduced_vectors_2d = []
+    pca_2d = PCA(n_components=2)
+    for cluster_id in set(initial_clusters):
+        cluster_indices = [i for i, x in enumerate(initial_clusters) if x == cluster_id]
+        cluster_vectors = custom_vectors[cluster_indices]
+
+        # Reduce to 2D within each cluster and re-cluster
+        reduced_vectors_2d_temp = pca_2d.fit_transform(cluster_vectors)
+        reduced_vectors_2d.extend(reduced_vectors_2d_temp)
+
+        dbscan_refined = DBSCAN(eps=0.08, min_samples=2)
+        refined_clusters = dbscan_refined.fit_predict(reduced_vectors_2d_temp)
+
+        # Ensures that the new set of cluster IDs does not overlap with any existing IDs.
+        final_clusters.extend(refined_clusters + max(final_clusters + [0]) + 1 if final_clusters else refined_clusters)
+
+    return filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d, final_clusters
