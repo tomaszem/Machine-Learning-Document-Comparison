@@ -2,8 +2,9 @@ import os
 from pdfminer.high_level import extract_text
 from concurrent.futures import ThreadPoolExecutor
 from app.preprocess_text import text_normalization
+from app.config.constants import PDF_PATH
 
-folder_path = 'documents'
+folder_path = PDF_PATH
 
 
 def extract_text_from_pdf(pdf_path):
