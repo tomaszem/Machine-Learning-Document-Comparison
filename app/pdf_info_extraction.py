@@ -6,6 +6,7 @@ from pdfminer.high_level import extract_text
 from pdfminer.pdfparser import PDFSyntaxError
 import string
 import spacy
+from app.config.constants import PDF_PATH
 
 
 def sanitize(filename):
@@ -209,7 +210,7 @@ def extract_details(directory):
 
 
 def get_pdf_details():
-    directory_path = 'documents'
+    directory_path = PDF_PATH
     pdf_details = extract_details(directory_path)
     extracted_details = []
     for filename, info in pdf_details.items():
