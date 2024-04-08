@@ -11,6 +11,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import glob
 import numpy as np
 import yaml
+from ChromaDB import ChromaDBClient
 from app.optimal_eps_range import find_optimal_eps_range
 
 app = Flask(__name__)
@@ -34,6 +35,10 @@ def next_run():
 
 
 def scheduled_cluster():
+
+
+
+
     # Perform clustering operations and retrieve the results
     filenames, reduced_vectors, clusters = perform_clustering()
 
@@ -62,6 +67,11 @@ def cluster():
 
 @app.route('/get-data')
 def get_data():
+    collection = ChromaDBClient.get_collection()
+    if collection is None:
+        return jsonify({"error": "No collection found."})
+
+
     list_of_files = glob.glob('./*.json')
     if list_of_files:
         latest_file = max(list_of_files, key=os.path.getctime)
@@ -73,6 +83,9 @@ def get_data():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    ChromaDBClient.update_collection_chromadb("../compareDocuments")     #Update the path/file selection
+
+
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
     file = request.files['file']
@@ -97,6 +110,7 @@ def upload_file():
         return jsonify({'message': 'File uploaded successfully'}), 200
     else:
         return jsonify({'error': 'Invalid file type'}), 400
+
 
 
 @app.route('/get-eps-range')
@@ -148,7 +162,7 @@ def submit_eps():
         with open(config_path, 'w') as file:
             yaml.safe_dump(config, file, default_flow_style=False)
 
-        return jsonify({"message": "Sucess", "eps": eps_value}), 200
+        return jsonify({"message": "Success", "eps": eps_value}), 200
     else:
         return jsonify({"error": "Internal error"}), 400
 
