@@ -63,7 +63,7 @@ def cluster():
     return jsonify(json_data)
 
 
-@app.route('/pdf-info')
+@app.route('/pdf-data')
 def get_pdf_detail():
     pdf_details = get_pdf_details()
     pdf_details_json = pdf_info_to_json(pdf_details)

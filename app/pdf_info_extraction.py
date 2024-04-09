@@ -50,7 +50,7 @@ def pdf_text(filename):
         return ""
 
 
-def find_persons(filename, title):
+def find_persons_locations(filename, title):
     nlp = spacy.load("en_core_web_sm")
     text = extract_text(filename)
     lines = text.split('\n')
@@ -69,13 +69,19 @@ def find_persons(filename, title):
     sanitized_text = '\n'.join(first_lines)
     doc = nlp(sanitized_text)
     persons = []
+    locations = []
 
     for ent in doc.ents:
+        if ent.label_ == "GPE":
+            clean_text = ent.text.strip().replace(".", "")
+            if clean_text.replace(" ", "").isalpha():
+                locations.append(clean_text)
         if ent.label_ == "PERSON" and "ORG" not in ent.text:
             persons.append(ent.text.strip())  # Remove leading/trailing whitespace
 
     persons = sanitize_authors(', '.join(persons))
     persons = remove_email_addresses(persons)
+    locations = list(set(locations))
 
     # Remove parts of title from persons
     title_parts = title.split()
@@ -83,7 +89,7 @@ def find_persons(filename, title):
         if part in persons:
             persons = persons.replace(part, '')
 
-    return persons
+    return persons, locations
 
 
 def title_start(lines):
@@ -201,10 +207,10 @@ def extract_details(directory):
             abstract = extract_abstract(file_path)
             title = pdf_title(file_path)  # Ignore authors
             references = extract_references(file_path)
-            authors = find_persons(file_path, title)
+            authors, locations = find_persons_locations(file_path, title)
 
-            pdf_details[filename] = {"abstract": abstract, "title": title, "authors": authors, "references": references
-                                     }
+            pdf_details[filename] = {"abstract": abstract, "title": title, "authors": authors, "locations": locations,
+                                     "references": references}
 
     return pdf_details
 
@@ -216,10 +222,11 @@ def get_pdf_details():
     for filename, info in pdf_details.items():
         details = {
             'filename': filename,
-            'abstract': info['abstract'],
-            'references': info['references'],
             'title': info['title'],
-            'authors': info['authors']
+            'authors': info['authors'],
+            'locations': info['locations'],
+            'abstract': info['abstract'],
+            'references': info['references']
         }
         extracted_details.append(details)
     return extracted_details
@@ -227,7 +234,7 @@ def get_pdf_details():
 
 # For testing purposes only
 """
-directory_path = "../documents"
+directory_path = "../documents/pdf"
 pdf_details = extract_details(directory_path)
 
 for filename, info in pdf_details.items():
@@ -235,8 +242,9 @@ for filename, info in pdf_details.items():
     references = info["references"]
     title = info["title"]
     authors = info["authors"]
+    locations = info["locations"]
 
     print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nNext Document:\n")
     print(
-        f"Filename: {filename}\nTitle: {title}\nAuthors: {authors}\nAbstract:\n{abstract}\nReferences:\n{references}\n")
+        f"Filename: {filename}\nTitle: {title}\nAuthors: {authors}\nLocations: {locations}\nAbstract:\n{abstract}\nReferences:\n{references}\n")
 """
