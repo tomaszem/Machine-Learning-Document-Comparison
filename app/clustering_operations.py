@@ -1,3 +1,4 @@
+import yaml
 from sklearn.decomposition import PCA
 from app.extract_text import load_texts_from_pdfs_batched
 from app.tf_idf_algorithm import custom_vectorization
@@ -6,11 +7,16 @@ from sklearn.cluster import DBSCAN
 from sklearn.cluster import AgglomerativeClustering
 from app.config.constants import BATCH_SIZE
 from app.optimal_number_of_clusters import number_of_clusters
+from app.config.constants import CONFIG_PATH
 
 
 def perform_clustering():
     texts, filenames = load_texts_from_pdfs_batched(BATCH_SIZE)
 
+    with open(CONFIG_PATH, 'r') as file:
+        config = yaml.safe_load(file)
+
+    eps_num = config['dbscan']['eps']
     custom_weights = {}
     custom_vectors = custom_vectorization(texts, custom_weights)
 
@@ -42,7 +48,7 @@ def perform_clustering():
         reduced_vectors_2d_temp = pca_2d.fit_transform(cluster_vectors)
         reduced_vectors_2d.extend(reduced_vectors_2d_temp)
 
-        dbscan_refined = DBSCAN(eps=0.08, min_samples=2)
+        dbscan_refined = DBSCAN(eps=eps_num, min_samples=2)
         refined_clusters = dbscan_refined.fit_predict(reduced_vectors_2d_temp)
 
         # Ensures that the new set of cluster IDs does not overlap with any existing IDs.
