@@ -1,5 +1,6 @@
 import numpy as np
 
+
 # Implementace PCA algoritmu
 def pca(X, num_components):
     # Vypočítáme průměr dat pro každý atribut

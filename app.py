@@ -16,6 +16,7 @@ from app.optimal_eps_range import find_optimal_eps_range
 
 app = Flask(__name__)
 CORS(app)  # Allow CORS
+documentLocation = r"C:\Users\Polymer\PycharmProjects\ConwayHash\Machine-Learning-Document-Comparison\compareDocuments"
 
 @app.route('/')
 def home():
@@ -35,10 +36,6 @@ def next_run():
 
 
 def scheduled_cluster():
-
-
-
-
     # Perform clustering operations and retrieve the results
     filenames, reduced_vectors, clusters = perform_clustering()
 
@@ -70,46 +67,52 @@ def get_data():
     collection = ChromaDBClient.get_collection()
     if collection is None:
         return jsonify({"error": "No collection found."})
+    return jsonify(collection)
 
 
-    list_of_files = glob.glob('./*.json')
-    if list_of_files:
-        latest_file = max(list_of_files, key=os.path.getctime)
-        with open(latest_file, 'r') as f:
-            return jsonify(json.load(f))
-    else:
-        return jsonify({"error": "No JSON files found."})
+    # list_of_files = glob.glob('./*.json')
+    # if list_of_files:
+    #     latest_file = max(list_of_files, key=os.path.getctime)
+    #     with open(latest_file, 'r') as f:
+    #         return jsonify(json.load(f))
+    # else:
+    #     return jsonify({"error": "No JSON files found."})
 
 
-@app.route('/upload', methods=['POST'])
+@app.route('/upload', methods=['POST', 'GET'])
 def upload_file():
-    ChromaDBClient.update_collection_chromadb("../compareDocuments")     #Update the path/file selection
+    # Update the path/file selection
+    try:
+        ChromaDBClient.update_collection_chromadb(documentLocation)
+        return 'Done'
+    except:
+        return 'Error'
 
 
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
-    if file and file.filename.endswith('.pdf'):
-        # Define the base directory dynamically
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-
-        # Define the target directory for PDF files
-        documents_dir = os.path.join(base_dir, 'documents', 'pdf')
-
-        if not os.path.exists(documents_dir):
-            os.makedirs(documents_dir)
-
-        # Construct the full path
-        file_path = os.path.join(documents_dir, file.filename)
-
-        # Save the file
-        file.save(file_path)
-
-        return jsonify({'message': 'File uploaded successfully'}), 200
-    else:
-        return jsonify({'error': 'Invalid file type'}), 400
+    # if 'file' not in request.files:
+    #     return jsonify({'error': 'No file part'}), 400
+    # file = request.files['file']
+    # if file.filename == '':
+    #     return jsonify({'error': 'No selected file'}), 400
+    # if file and file.filename.endswith('.pdf'):
+    #     # Define the base directory dynamically
+    #     base_dir = os.path.dirname(os.path.abspath(__file__))
+    #
+    #     # Define the target directory for PDF files
+    #     documents_dir = os.path.join(base_dir, 'documents', 'pdf')
+    #
+    #     if not os.path.exists(documents_dir):
+    #         os.makedirs(documents_dir)
+    #
+    #     # Construct the full path
+    #     file_path = os.path.join(documents_dir, file.filename)
+    #
+    #     # Save the file
+    #     file.save(file_path)
+    #
+    #     return jsonify({'message': 'File uploaded successfully'}), 200
+    # else:
+    #     return jsonify({'error': 'Invalid file type'}), 400
 
 
 
@@ -133,6 +136,7 @@ def get_eps_range():
     }
 
     return jsonify(result)
+
 
 
 @app.route('/submit-eps', methods=['POST'])
@@ -175,3 +179,5 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     # use_reloader=False important for APScheduler
     app.run(debug=True, host='0.0.0.0', port=port, use_reloader=False)
+
+
