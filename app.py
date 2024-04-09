@@ -117,7 +117,7 @@ def get_eps_range():
         with open(latest_file, 'r') as file:
             data = json.load(file)
 
-    data_array = np.array([[item["x"], item["y"]] for item in data])
+    data_array = np.array([[item["x_2d"], item["y_2d"]] for item in data])
 
     # Find the optimal EPS range
     start_eps, end_eps, suggested_eps_values = find_optimal_eps_range(data_array)
