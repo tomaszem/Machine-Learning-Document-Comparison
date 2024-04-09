@@ -5,6 +5,7 @@ from sklearn.cluster import DBSCAN
 # from umap import UMAP
 from sklearn.cluster import AgglomerativeClustering
 from app.config.constants import BATCH_SIZE
+from app.optimal_number_of_clusters import number_of_clusters
 
 
 def perform_clustering():
@@ -25,7 +26,8 @@ def perform_clustering():
     pca_3d = PCA(n_components=3)
     reduced_vectors_3d = pca_3d.fit_transform(custom_vectors)
 
-    agglomerative_clustering = AgglomerativeClustering(n_clusters=5, linkage='ward')
+    clusters_num = number_of_clusters(reduced_vectors_3d)
+    agglomerative_clustering = AgglomerativeClustering(n_clusters=clusters_num, linkage='ward')
     initial_clusters = agglomerative_clustering.fit_predict(reduced_vectors_3d)
 
     # Prepare for Second stage clustering
