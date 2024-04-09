@@ -1,2 +1,2 @@
 dbscan:
-  eps: 0.21
+  eps: 0.08
