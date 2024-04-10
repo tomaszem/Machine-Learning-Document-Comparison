@@ -16,10 +16,8 @@ def vectorize_text(text, vocabulary, word_weights):
 
 
 def custom_vectorization(texts, word_weights={}):
-    # Initialize the TF-IDF
     tfidf_vectorized = TfidfVectorizer()
 
-    # Fit and transform the texts to a TF-IDF matrix
     tfidf_matrix = tfidf_vectorized.fit_transform(texts)
 
     # Get feature names to locate columns in matrix

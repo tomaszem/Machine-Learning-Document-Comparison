@@ -17,6 +17,8 @@ def perform_clustering():
         config = yaml.safe_load(file)
 
     eps_num = config['dbscan']['eps']
+    n_cluster_conf = config['agglomerative_clusters']['n']
+
     custom_weights = {}
     custom_vectors = custom_vectorization(texts, custom_weights)
 
@@ -32,7 +34,7 @@ def perform_clustering():
     pca_3d = PCA(n_components=3)
     reduced_vectors_3d = pca_3d.fit_transform(custom_vectors)
 
-    clusters_num = number_of_clusters(reduced_vectors_3d)
+    clusters_num = n_cluster_conf if n_cluster_conf is not None else number_of_clusters(reduced_vectors_3d)
     agglomerative_clustering = AgglomerativeClustering(n_clusters=clusters_num, linkage='ward')
     initial_clusters = agglomerative_clustering.fit_predict(reduced_vectors_3d)
 
