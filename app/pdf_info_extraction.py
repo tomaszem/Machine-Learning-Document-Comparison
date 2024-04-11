@@ -227,6 +227,7 @@ def get_pdf_details():
             'locations': info['locations'],
             'abstract': info['abstract'],
             'references': info['references']
+
         }
         extracted_details.append(details)
     return extracted_details
