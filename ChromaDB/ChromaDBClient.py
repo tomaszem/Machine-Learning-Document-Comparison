@@ -1,15 +1,15 @@
 import os
 import fitz  # PyMuPDF
 import chromadb
-import numpy as np
-from sklearn.decomposition import PCA
 from app import pdf_info_extraction
 import chromadb.utils.embedding_functions as emb_fn
+from app import clustering_operations
+import json
 
 default_ef = emb_fn.DefaultEmbeddingFunction()
 client = chromadb.HttpClient(host='localhost', port=8000)
 
-collection = client.get_or_create_collection(name="pdf_collection", embedding_function=default_ef)
+collection = client.get_or_create_collection(name="pdf_collection")
 
 pdf_testPath = None
 texts = None
@@ -17,25 +17,44 @@ texts = None
 
 def update_collection_chromadb(pdf_directory):
     pdf_details = pdf_info_extraction.extract_details(pdf_directory)
-    for filename in os.listdir(pdf_directory):
+    filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d, final_clusters, custom_vectors = clustering_operations.perform_clustering()
+
+    for i, filename in enumerate(os.listdir(pdf_directory)):
         if filename.endswith(".pdf"):
             metadata = pdf_details.get(filename)
-            if metadata is not None:
-                collection.upsert(
-                    documents=[filename],
-                    metadatas=[{
-                        "title": metadata["title"],
-                        "authors": metadata["authors"],
-                        "abstract": metadata["abstract"],
-                        "references": metadata["references"]
-                    }],
-                    ids=[filename]
-                )
+            if metadata is None:
+                print(f"No metadata found for file: {filename}")
+                continue  # Skip this iteration if metadata is None
+
+            # Ensure embeddings are a list of lists of integers or floats
+            embeddings_list = [list(map(float, sublist)) for sublist in [custom_vectors[i]]]
+            reduced_vectors_3d_list = [reduced_vectors_3d[i].tolist()]
+            reduced_vectors_2d_list = [reduced_vectors_2d[i].tolist()]
+            initial_clusters_list = [int(initial_clusters[i])]
+            final_clusters_list = [int(final_clusters[i])]
+
+            collection.upsert(
+                documents=[filename],
+                embeddings=embeddings_list,
+                metadatas=[{
+                    "document": filename,
+                    "title": metadata["title"],
+                    "authors": metadata["authors"],
+                    "abstract": metadata["abstract"],
+                    'locations': metadata['locations'],
+                    "references": metadata["references"],
+                    "reduced_vectors_3d": json.dumps(reduced_vectors_3d_list),
+                    "reduce_vectors_2d": json.dumps(reduced_vectors_2d_list),
+                    "initial_clusters": json.dumps(initial_clusters_list),
+                    "final_clusters": json.dumps(final_clusters_list),
+                }],
+                ids=[filename]
+            )
 
 
-def extract_text_from_pdf(pdf_testPath):
+def extract_text_from_pdf(pdf_directory):
     text = ''
-    doc = fitz.open(pdf_testPath)
+    doc = fitz.open(pdf_directory)
     for page_num in range(doc.page_count):
         page = doc[page_num]
         text += page.get_text()
@@ -57,18 +76,19 @@ def get_collection():
         collection = collection.get(include=["documents", "metadatas", "embeddings"])
         return collection
     except chromadb.exceptions.CollectionNotFound:
-        return None
+        return
 
 
 if __name__ == "__main__":
-    pdf_directory = "compareDocuments"
-    pdf_testPath = "../compareDocuments"
+    pdf_directory = "documents/pdf"
+    pdf_testPath = "../documents/pdf"
 
     pdf_files = [os.path.join(pdf_testPath, f) for f in os.listdir(pdf_testPath) if f.endswith('.pdf')]
     texts = [extract_text_from_pdf(pdf_file) for pdf_file in pdf_files]
 
     script_directory = os.path.dirname(os.path.abspath(__file__))
-    pdf_testDirectory = os.path.join(script_directory, "..", pdf_testPath)
+    # pdf_testDirectory = os.path.join(script_directory, "..", pdf_testPath)
     pdf_directory = os.path.join(script_directory, "..", pdf_directory)
 
-    client.delete_collection(name="pdf_collection")
+# update_collection_chromadb(pdf_testPath)
+# client.delete_collection(name="pdf_collection")

@@ -22,11 +22,18 @@ def text_normalization(text):
     # Call the function to ensure resources are downloaded
     # download_nltk_resources()
 
+    # Remove specific characters outside the ASCII range
+    text = re.sub(r'[^\x00-\x7F]+', ' ', text)
     # Convert text to lowercase
     text = text.lower()
     # Tokenize the text to handle words properly
     words = word_tokenize(text)
-    # Remove all non-alphanumeric characters from each word and filter out stopwords
-    filtered_words = [re.sub(r'\W+', '', word) for word in words if word not in stop_words and word != '']
-    # Join the filtered words back into a single string
+
+    filtered_words = [
+        re.sub(r'\W+', '', word) for word in words
+        if word not in stop_words
+        and len(word) > 1
+        and len(re.findall(r'\d', word)) <= 5
+    ]
+
     return ' '.join(filtered_words)

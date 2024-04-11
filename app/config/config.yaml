@@ -1,2 +1,4 @@
 dbscan:
   eps: 0.08
+agglomerative_clusters:
+  n: 5

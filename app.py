@@ -19,7 +19,7 @@ from app.prepare_json_data import prepare_json_data_v2
 
 app = Flask(__name__)
 CORS(app)  # Allow CORS
-documentLocation = r"C:\Users\Polymer\PycharmProjects\ConwayHash\Machine-Learning-Document-Comparison\compareDocuments"
+documentLocation = r"C:\Users\Polymer\PycharmProjects\Machine-Learning-Document-Comparison\documents\pdf"
 
 
 @app.route('/')
@@ -44,7 +44,8 @@ def scheduled_cluster():
     filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d, final_clusters = perform_clustering()
 
     # Prepare data for JSON
-    json_data = prepare_json_data_v2(filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d, final_clusters)
+    json_data = prepare_json_data_v2(filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d,
+                                     final_clusters)
 
     # SAVE
     filename = f"cluster_data_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.json"
@@ -60,7 +61,8 @@ def cluster():
     filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d, final_clusters = perform_clustering()
 
     # Prepare data for JSON
-    json_data = prepare_json_data_v2(filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d, final_clusters)
+    json_data = prepare_json_data_v2(filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d,
+                                     final_clusters)
 
     return jsonify(json_data)
 
@@ -80,15 +82,6 @@ def get_data():
     return jsonify(collection)
 
 
-    # list_of_files = glob.glob('./*.json')
-    # if list_of_files:
-    #     latest_file = max(list_of_files, key=os.path.getctime)
-    #     with open(latest_file, 'r') as f:
-    #         return jsonify(json.load(f))
-    # else:
-    #     return jsonify({"error": "No JSON files found."})
-
-
 @app.route('/upload', methods=['POST', 'GET'])
 def upload_file():
     # Update the path/file selection
@@ -97,7 +90,6 @@ def upload_file():
         return 'Done'
     except:
         return 'Error'
-
 
     # if 'file' not in request.files:
     #     return jsonify({'error': 'No file part'}), 400
@@ -125,7 +117,6 @@ def upload_file():
     #     return jsonify({'error': 'Invalid file type'}), 400
 
 
-
 @app.route('/get-eps-range')
 def get_eps_range():
     list_of_files = glob.glob('./*.json')
@@ -146,7 +137,6 @@ def get_eps_range():
     }
 
     return jsonify(result)
-
 
 
 @app.route('/submit-eps', methods=['POST'])
@@ -189,5 +179,3 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     # use_reloader=False important for APScheduler
     app.run(debug=True, host='0.0.0.0', port=port, use_reloader=False)
-
-

@@ -54,4 +54,4 @@ def perform_clustering():
         # Ensures that the new set of cluster IDs does not overlap with any existing IDs.
         final_clusters.extend(refined_clusters + max(final_clusters + [0]) + 1 if final_clusters else refined_clusters)
 
-    return filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d, final_clusters
+    return filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d, final_clusters, custom_vectors

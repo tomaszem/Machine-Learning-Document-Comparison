@@ -11,6 +11,7 @@ def pdf_info_to_json(pdf_details):
             "filename": details['filename'],
             "title": details['title'],
             "authors": details['authors'],
+            "locations": details['locations'],
             "abstract": details['abstract'],
             "references": details['references']
         }
