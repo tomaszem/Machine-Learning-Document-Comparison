@@ -7,8 +7,8 @@ nltk
 APScheduler
 flask-cors
 chromadb
-fitz
+pymupdf
 umap-learn
-pdfminer
+pdfminer.six
 PyPDF4
 spacy
