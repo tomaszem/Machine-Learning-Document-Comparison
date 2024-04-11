@@ -16,10 +16,11 @@ from app.optimal_eps_range import find_optimal_eps_range
 from app.pdf_info_extraction import get_pdf_details
 from app.prepare_json_pdf_data import pdf_info_to_json
 from app.prepare_json_data import prepare_json_data_v2
+import app.config.constants as constants
 
 app = Flask(__name__)
 CORS(app)  # Allow CORS
-documentLocation = r"C:\Users\Polymer\PycharmProjects\Machine-Learning-Document-Comparison\documents\pdf"
+documentLocation = constants.PDF_PATH
 
 
 @app.route('/')
