@@ -2,12 +2,10 @@ import os
 import fitz  # PyMuPDF
 import chromadb
 from app import pdf_info_extraction
-import chromadb.utils.embedding_functions as emb_fn
 from app import clustering_operations
 import json
 
-default_ef = emb_fn.DefaultEmbeddingFunction()
-client = chromadb.HttpClient(host='localhost', port=8000)
+client = chromadb.HttpClient(host='chromaDB', port=8000)
 
 collection = client.get_or_create_collection(name="pdf_collection")
 

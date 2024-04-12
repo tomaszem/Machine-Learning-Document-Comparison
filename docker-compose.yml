@@ -10,7 +10,10 @@ services:
       - "5000:5000"
     volumes:
       - .:/app
-  chroma:
+    networks:
+      - net
+  chromaDB:
+    container_name: chroma_database
     image: ghcr.io/chroma-core/chroma:latest
     volumes:
       - index_data:/chroma/.chroma/index
