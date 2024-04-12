@@ -73,7 +73,7 @@ def perform_query(texts):
 def get_collection():
     try:
         collection = client.get_collection(name="pdf_collection")
-        collection = collection.get(include=["documents", "metadatas", "embeddings"])
+        collection = collection.get(include=["metadatas"])
         return collection
     except chromadb.exceptions.CollectionNotFound:
         return
