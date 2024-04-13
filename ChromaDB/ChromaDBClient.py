@@ -15,6 +15,8 @@ texts = None
 
 def update_collection_chromadb(pdf_directory):
     pdf_details = pdf_info_extraction.extract_details(pdf_directory)
+    if pdf_details is None:
+        return 'No PDF details found'
     filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d, final_clusters, custom_vectors = clustering_operations.perform_clustering()
 
     for i, filename in enumerate(os.listdir(pdf_directory)):
@@ -69,24 +71,21 @@ def perform_query(texts):
 
 
 def get_collection():
-    try:
-        collection = client.get_collection(name="pdf_collection")
-        collection = collection.get(include=["metadatas"])
-        return collection
-    except chromadb.exceptions.CollectionNotFound:
-        return
+    collection = client.get_collection(name="pdf_collection")
+    collection = collection.get(include=["metadatas"])
+    return collection
 
 
-if __name__ == "__main__":
-    pdf_directory = "documents/pdf"
-    pdf_testPath = "../documents/pdf"
-
-    pdf_files = [os.path.join(pdf_testPath, f) for f in os.listdir(pdf_testPath) if f.endswith('.pdf')]
-    texts = [extract_text_from_pdf(pdf_file) for pdf_file in pdf_files]
-
-    script_directory = os.path.dirname(os.path.abspath(__file__))
-    # pdf_testDirectory = os.path.join(script_directory, "..", pdf_testPath)
-    pdf_directory = os.path.join(script_directory, "..", pdf_directory)
+# if __name__ == "__main__":
+#     pdf_directory = "documents/pdf"
+#     pdf_testPath = "../documents/pdf"
+#
+#     pdf_files = [os.path.join(pdf_testPath, f) for f in os.listdir(pdf_testPath) if f.endswith('.pdf')]
+#     texts = [extract_text_from_pdf(pdf_file) for pdf_file in pdf_files]
+#
+#     script_directory = os.path.dirname(os.path.abspath(__file__))
+#     # pdf_testDirectory = os.path.join(script_directory, "..", pdf_testPath)
+#     pdf_directory = os.path.join(script_directory, "..", pdf_directory)
 
 # update_collection_chromadb(pdf_testPath)
 # client.delete_collection(name="pdf_collection")

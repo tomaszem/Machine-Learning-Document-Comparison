@@ -90,7 +90,7 @@ def upload_file():
         ChromaDBClient.update_collection_chromadb(documentLocation)
         return 'Done'
     except:
-        return 'Error'
+        return ChromaDBClient.update_collection_chromadb(documentLocation)
 
     # if 'file' not in request.files:
     #     return jsonify({'error': 'No file part'}), 400

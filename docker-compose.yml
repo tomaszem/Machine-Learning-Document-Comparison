@@ -10,8 +10,11 @@ services:
       - "5000:5000"
     volumes:
       - .:/app
+    depends_on:
+      - chromaDB
     networks:
       - net
+
   chromaDB:
     container_name: chroma_database
     image: ghcr.io/chroma-core/chroma:latest
@@ -19,6 +22,11 @@ services:
       - index_data:/chroma/.chroma/index
     ports:
       - "8000:8000"
+    healthcheck:
+      test: [ "CMD", "/bin/bash", "-c", "cat < /dev/null > /dev/tcp/localhost/8000" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       - net
 
