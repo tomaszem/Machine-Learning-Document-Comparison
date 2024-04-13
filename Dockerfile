@@ -1,4 +1,3 @@
-# Use the official Python 3.12.0 image as the base image
 FROM python:3.12.0
 
 # Set the working directory in the container
@@ -11,6 +10,9 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 # Download NLTK data
 RUN python -m nltk.downloader stopwords
 RUN python -m nltk.downloader punkt
+
+# spaCy en_core_web_sm
+RUN python -m spacy download en_core_web_sm
 
 # Copy the entire application into the container
 COPY . .
