@@ -10,7 +10,7 @@ from app.optimal_number_of_clusters import number_of_clusters
 from app.config.constants import CONFIG_PATH
 
 
-def perform_clustering():
+def perform_clustering(custom_weights={}):
     texts, filenames = load_texts_from_pdfs_batched(BATCH_SIZE)
 
     with open(CONFIG_PATH, 'r') as file:
@@ -19,7 +19,6 @@ def perform_clustering():
     eps_num = config['dbscan']['eps']
     n_cluster_conf = config['agglomerative_clusters']['n']
 
-    custom_weights = {}
     custom_vectors = custom_vectorization(texts, custom_weights)
 
     # UMAP for dimensionality reduction
