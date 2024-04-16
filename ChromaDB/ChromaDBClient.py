@@ -1,9 +1,10 @@
 import os
 import fitz  # PyMuPDF
 import chromadb
+import json
 from app import pdf_info_extraction
 from app import clustering_operations
-import json
+from app import set_vector_weights
 
 client = chromadb.HttpClient(host='chromaDB', port=8000)
 
@@ -17,7 +18,9 @@ def update_collection_chromadb(pdf_directory):
     pdf_details = pdf_info_extraction.extract_details(pdf_directory)
     if pdf_details is None:
         return 'No PDF details found'
-    filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d, final_clusters, custom_vectors = clustering_operations.perform_clustering()
+    references_list = [details['references'] for details in pdf_details.values()]
+    custom_weights = set_vector_weights.vector_weights(references_list)
+    filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d, final_clusters, custom_vectors = clustering_operations.perform_clustering(custom_weights)
 
     for i, filename in enumerate(os.listdir(pdf_directory)):
         if filename.endswith(".pdf"):
