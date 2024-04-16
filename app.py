@@ -20,7 +20,6 @@ import app.config.constants as constants
 
 app = Flask(__name__)
 CORS(app)  # Allow CORS
-documentLocation = constants.PDF_PATH
 
 
 @app.route('/')
@@ -41,31 +40,27 @@ def next_run():
 
 
 def scheduled_cluster():
-    # Perform clustering operations and retrieve the results
-    filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d, final_clusters = perform_clustering()
+    documentLocation = constants.PDF_PATH
+    if not documentLocation:
+        return jsonify({'error': 'No document location provided'}), 400
 
-    # Prepare data for JSON
-    json_data = prepare_json_data_v2(filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d,
-                                     final_clusters)
-
-    # SAVE
-    filename = f"cluster_data_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.json"
-    with open(filename, 'w') as f:
-        json.dump(json_data, f, indent=4)
-
-    print(f"Cluster data updated and saved to {filename}")
+    try:
+        update_result = ChromaDBClient.update_collection_chromadb(documentLocation)
+        return jsonify({'message': 'Done', 'result': update_result}), 200
+    except Exception as e:
+        return jsonify({'error': 'Failed to update collection', 'exception': str(e)}), 500
 
 
-@app.route('/cluster-data')
-def cluster():
-    # Perform clustering operations and retrieve the results
-    filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d, final_clusters = perform_clustering()
-
-    # Prepare data for JSON
-    json_data = prepare_json_data_v2(filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d,
-                                     final_clusters)
-
-    return jsonify(json_data)
+# @app.route('/cluster-data')
+# def cluster():
+#     # Perform clustering operations and retrieve the results
+#     filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d, final_clusters = perform_clustering()
+#
+#     # Prepare data for JSON
+#     json_data = prepare_json_data_v2(filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d,
+#                                      final_clusters)
+#
+#     return jsonify(json_data)
 
 
 @app.route('/pdf-data')
@@ -83,39 +78,45 @@ def get_data():
     return jsonify(collection)
 
 
-@app.route('/upload', methods=['POST', 'GET'])
-def upload_file():
-    # Update the path/file selection
-    try:
-        ChromaDBClient.update_collection_chromadb(documentLocation)
-        return 'Done'
-    except:
-        return ChromaDBClient.update_collection_chromadb(documentLocation)
+@app.route('/cluster-data', methods=['POST'])
+def cluster():
+    documentLocation = constants.PDF_PATH
+    if not documentLocation:
+        return jsonify({'error': 'No document location provided'}), 400
 
-    # if 'file' not in request.files:
-    #     return jsonify({'error': 'No file part'}), 400
-    # file = request.files['file']
-    # if file.filename == '':
-    #     return jsonify({'error': 'No selected file'}), 400
-    # if file and file.filename.endswith('.pdf'):
-    #     # Define the base directory dynamically
-    #     base_dir = os.path.dirname(os.path.abspath(__file__))
-    #
-    #     # Define the target directory for PDF files
-    #     documents_dir = os.path.join(base_dir, 'documents', 'pdf')
-    #
-    #     if not os.path.exists(documents_dir):
-    #         os.makedirs(documents_dir)
-    #
-    #     # Construct the full path
-    #     file_path = os.path.join(documents_dir, file.filename)
-    #
-    #     # Save the file
-    #     file.save(file_path)
-    #
-    #     return jsonify({'message': 'File uploaded successfully'}), 200
-    # else:
-    #     return jsonify({'error': 'Invalid file type'}), 400
+    try:
+        update_result = ChromaDBClient.update_collection_chromadb(documentLocation)
+        return jsonify({'message': 'Done', 'result': update_result}), 200
+    except Exception as e:
+        return jsonify({'error': 'Failed to update collection', 'exception': str(e)}), 500
+
+
+@app.route('/upload-pdf', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    if file and file.filename.endswith('.pdf'):
+        # Define the base directory dynamically
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # Define the target directory for PDF files
+        documents_dir = os.path.join(base_dir, 'documents', 'pdf')
+
+        if not os.path.exists(documents_dir):
+            os.makedirs(documents_dir)
+
+        # Construct the full path
+        file_path = os.path.join(documents_dir, file.filename)
+
+        # Save the file
+        file.save(file_path)
+
+        return jsonify({'message': 'File uploaded successfully'}), 200
+    else:
+        return jsonify({'error': 'Invalid file type'}), 400
 
 
 @app.route('/get-eps-range')
