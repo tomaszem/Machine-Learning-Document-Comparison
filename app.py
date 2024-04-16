@@ -134,7 +134,7 @@ def get_eps_range():
         x_values.append(reduce_vectors_2d[0][0])
         y_values.append(reduce_vectors_2d[0][1])
 
-    data_array = np.array([x, y] for x, y in zip(x_values, y_values))
+    data_array = np.array([[x, y] for x, y in zip(x_values, y_values)])
 
     # Find the optimal EPS range
     start_eps, end_eps, suggested_eps_values = find_optimal_eps_range(data_array)
