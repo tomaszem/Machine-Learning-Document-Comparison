@@ -16,8 +16,11 @@ This command performs the following actions:
 `--build` Forces the build of the Docker images even if an image exists.
 
 `-d` Runs the containers in the background (detached mode), allowing you to continue using the terminal for other tasks.
-.
 
+This option below forces Docker Compose to recreate the containers whether or not there are changes in the configuration.
+```bash
+$ docker-compose up -d --build --force-recreate
+```
 ### Only Back-End app
 To build the Image only with Back-End app using the following command:
 
