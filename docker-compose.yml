@@ -10,6 +10,8 @@ services:
       - "5000:5000"
     volumes:
       - .:/app
+    environment:
+      - TZ=Europe/Prague
     depends_on:
       - chromaDB
     networks:
@@ -22,6 +24,8 @@ services:
       - index_data:/chroma/.chroma/index
     ports:
       - "8000:8000"
+    environment:
+      - TZ=Europe/Prague
     healthcheck:
       test: [ "CMD", "/bin/bash", "-c", "cat < /dev/null > /dev/tcp/localhost/8000" ]
       interval: 30s
@@ -31,11 +35,11 @@ services:
       - net
 
 volumes:
-    index_data:
-      driver: local
-    backups:
-      driver: local
+  index_data:
+    driver: local
+  backups:
+    driver: local
 
 networks:
-    net:
-      driver: bridge
+  net:
+    driver: bridge
