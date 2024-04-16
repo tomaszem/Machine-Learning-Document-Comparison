@@ -45,8 +45,8 @@ def scheduled_cluster():
         return jsonify({'error': 'No document location provided'}), 400
 
     try:
-        update_result = ChromaDBClient.update_collection_chromadb(documentLocation)
-        return jsonify({'message': 'Done', 'result': update_result}), 200
+        ChromaDBClient.update_collection_chromadb(documentLocation)
+        return jsonify({'message': 'Done'}), 200
     except Exception as e:
         return jsonify({'error': 'Failed to update collection', 'exception': str(e)}), 500
 
@@ -74,19 +74,19 @@ def get_pdf_detail():
 def get_data():
     collection = ChromaDBClient.get_collection()
     if collection is None:
-        return jsonify({"error": "No collection found."})
+        return jsonify({"error": "No collection found."}), 400
     return jsonify(collection)
 
 
-@app.route('/cluster-data', methods=['POST'])
+@app.route('/cluster-data', methods=['POST', 'GET'])
 def cluster():
     documentLocation = constants.PDF_PATH
     if not documentLocation:
         return jsonify({'error': 'No document location provided'}), 400
 
     try:
-        update_result = ChromaDBClient.update_collection_chromadb(documentLocation)
-        return jsonify({'message': 'Done', 'result': update_result}), 200
+        ChromaDBClient.update_collection_chromadb(documentLocation)
+        return jsonify({'message': 'Done'}), 200
     except Exception as e:
         return jsonify({'error': 'Failed to update collection', 'exception': str(e)}), 500
 
@@ -121,13 +121,20 @@ def upload_file():
 
 @app.route('/get-eps-range')
 def get_eps_range():
-    list_of_files = glob.glob('./*.json')
-    if list_of_files:
-        latest_file = max(list_of_files, key=os.path.getctime)
-        with open(latest_file, 'r') as file:
-            data = json.load(file)
+    collection = ChromaDBClient.get_collection()
+    if collection is None:
+        return jsonify({"error": "No collection found."}), 400
+    
+    jsonify(collection)
+    x_values = []
+    y_values = []
 
-    data_array = np.array([[item["x_2d"], item["y_2d"]] for item in data])
+    for metadata in collection['metadatas']:
+        reduce_vectors_2d = json.loads(metadata['reduce_vectors_2d'])
+        x_values.append(reduce_vectors_2d[0][0])
+        y_values.append(reduce_vectors_2d[0][1])
+
+    data_array = np.array([x, y] for x, y in zip(x_values, y_values))
 
     # Find the optimal EPS range
     start_eps, end_eps, suggested_eps_values = find_optimal_eps_range(data_array)
