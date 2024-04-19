@@ -17,6 +17,7 @@ from app.pdf_info_extraction import get_pdf_details
 from app.prepare_json_pdf_data import pdf_info_to_json
 from app.prepare_json_data import prepare_json_data_v2
 import app.config.constants as constants
+import platform
 
 app = Flask(__name__)
 CORS(app)  # Allow CORS
@@ -24,7 +25,19 @@ CORS(app)  # Allow CORS
 
 @app.route('/')
 def home():
-    return 'Home'
+    python_info = {
+        "python_version": platform.python_version(),
+        "python_compiler": platform.python_compiler(),
+    }
+
+    health_info = {
+        "status": "up",
+        "current_time": datetime.now().isoformat(),
+        "os_info": platform.version(),
+        "python_info": python_info
+    }
+
+    return jsonify(health_info)
 
 
 @app.route('/next-run')
