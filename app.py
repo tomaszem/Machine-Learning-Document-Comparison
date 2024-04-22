@@ -21,6 +21,8 @@ import platform
 
 app = Flask(__name__)
 CORS(app)  # Allow CORS
+scheduler = BackgroundScheduler()
+job = None
 
 
 @app.route('/')
@@ -64,18 +66,6 @@ def scheduled_cluster():
         return jsonify({'error': 'Failed to update collection', 'exception': str(e)}), 500
 
 
-# @app.route('/cluster-data')
-# def cluster():
-#     # Perform clustering operations and retrieve the results
-#     filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d, final_clusters = perform_clustering()
-#
-#     # Prepare data for JSON
-#     json_data = prepare_json_data_v2(filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d,
-#                                      final_clusters)
-#
-#     return jsonify(json_data)
-
-
 @app.route('/pdf-data')
 def get_pdf_detail():
     pdf_details = get_pdf_details()
@@ -99,7 +89,7 @@ def cluster():
 
     try:
         ChromaDBClient.update_collection_chromadb(documentLocation)
-        return jsonify({'message': 'Done'}), 200
+        return jsonify({'message': 'Success'}), 200
     except Exception as e:
         return jsonify({'error': 'Failed to update collection', 'exception': str(e)}), 500
 
@@ -127,9 +117,9 @@ def upload_file():
         # Save the file
         file.save(file_path)
 
-        return jsonify({'message': 'File uploaded successfully'}), 200
+        return jsonify({"message": "Success"}), 200
     else:
-        return jsonify({'error': 'Invalid file type'}), 400
+        return jsonify({"error": "Internal error"}), 400
 
 
 @app.route('/get-eps-range')
@@ -137,7 +127,7 @@ def get_eps_range():
     collection = ChromaDBClient.get_collection()
     if collection is None:
         return jsonify({"error": "No collection found."}), 400
-    
+
     jsonify(collection)
     x_values = []
     y_values = []
@@ -167,9 +157,6 @@ def submit_eps():
     eps_value = data.get('eps')
 
     if eps_value is not None:
-        print(f"Received EPS value: {eps_value}")
-
-        # Define the path to the config.yaml file
         config_path = os.path.join('app', 'config', 'config.yaml')
 
         # Load the current contents of the config.yaml file
@@ -179,24 +166,62 @@ def submit_eps():
         else:
             config = {}
 
-        # Update the EPS value
         if 'dbscan' not in config:
             config['dbscan'] = {}
         config['dbscan']['eps'] = eps_value
 
-        # Write the updated dictionary back to the config file
         with open(config_path, 'w') as file:
             yaml.safe_dump(config, file, default_flow_style=False)
 
-        return jsonify({"message": "Success", "eps": eps_value}), 200
+        return jsonify({"message": "Success"}), 200
+    else:
+        return jsonify({"error": "Internal error"}), 400
+
+
+@app.route('/submit-clusters-num', methods=['POST'])
+def receive_clusters_num():
+    data = request.get_json()
+    clusters_num = data.get('numberOfClusters')
+
+    if clusters_num is not None:
+        config_path = os.path.join('app', 'config', 'config.yaml')
+
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as file:
+                config = yaml.safe_load(file) or {}
+        else:
+            config = {}
+
+        if 'agglomerative_clusters' not in config:
+            config['agglomerative_clusters'] = {}
+        config['agglomerative_clusters']['n'] = None if clusters_num == 0 else clusters_num
+
+        with open(config_path, 'w') as file:
+            yaml.safe_dump(config, file, default_flow_style=False)
+
+        return jsonify({"message": "Success"}), 200
+    else:
+        return jsonify({"error": "Internal error"}), 400
+
+
+@app.route('/submit-cron-time', methods=['POST'])
+def submit_cron():
+    global job
+    hours = request.json['hours']
+    minutes = request.json['minutes']
+    if hours is not None and minutes is not None:
+        if job:
+            scheduler.remove_job(job.id)
+
+        job = scheduler.add_job(scheduled_cluster, 'cron', hour=hours, minute=minutes)
+        return jsonify({"message": "Success"}), 200
     else:
         return jsonify({"error": "Internal error"}), 400
 
 
 if __name__ == "__main__":
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(scheduled_cluster, 'cron', hour=2, minute=00)
     scheduler.start()
+    job = scheduler.add_job(scheduled_cluster, 'cron', hour=2, minute=00)
 
     port = int(os.environ.get("PORT", 5000))
     # use_reloader=False important for APScheduler
