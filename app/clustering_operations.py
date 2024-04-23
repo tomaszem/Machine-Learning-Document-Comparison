@@ -1,4 +1,5 @@
 import yaml
+import numpy as np
 from sklearn.decomposition import PCA
 from app.extract_text import load_texts_from_pdfs_batched
 from app.tf_idf_algorithm import custom_vectorization
@@ -41,8 +42,8 @@ def perform_clustering(custom_weights={}):
     final_clusters = []
     reduced_vectors_2d = []
     pca_2d = PCA(n_components=2)
-    for cluster_id in set(initial_clusters):
-        cluster_indices = [i for i, x in enumerate(initial_clusters) if x == cluster_id]
+    for cluster_id in np.unique(initial_clusters):
+        cluster_indices = np.where(initial_clusters == cluster_id)[0]
         cluster_vectors = custom_vectors[cluster_indices]
 
         # Reduce to 2D within each cluster and re-cluster
@@ -52,7 +53,10 @@ def perform_clustering(custom_weights={}):
         dbscan_refined = DBSCAN(eps=eps_num, min_samples=2)
         refined_clusters = dbscan_refined.fit_predict(reduced_vectors_2d_temp)
 
-        # Ensures that the new set of cluster IDs does not overlap with any existing IDs.
-        final_clusters.extend(refined_clusters + max(final_clusters + [0]) + 1 if final_clusters else refined_clusters)
+        if final_clusters:
+            max_label = max(final_clusters)
+            final_clusters.extend(refined_clusters + max_label + 1)
+        else:
+            final_clusters.extend(refined_clusters)
 
     return filenames, reduced_vectors_3d, initial_clusters, reduced_vectors_2d, final_clusters, custom_vectors
